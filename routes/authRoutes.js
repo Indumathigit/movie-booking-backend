@@ -56,4 +56,20 @@ router.post("/login", function(req, res) {
     })
 })
 
+router.post("/reset", function(req, res) {
+  var { email, newPassword } = req.body
+  User.findOneAndUpdate(
+    { email: email },
+    { password: newPassword },
+    { new: true }
+  )
+    .then(function(user) {
+      if (!user) return res.status(404).json({ success: false, message: "User not found" })
+      res.json({ success: true, message: "Password reset successful" })
+    })
+    .catch(function(err) {
+      res.status(500).json({ success: false, message: err.message })
+    })
+})
+
 module.exports = router
