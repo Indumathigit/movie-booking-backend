@@ -10,12 +10,14 @@ router.post("/create-intent", function(req, res) {
     return res.status(400).json({ success: false, message: "Invalid amount" })
   }
 
-  stripe.paymentIntents.create({
-    amount: Math.round(amount * 100), // convert to paise
-    currency: "inr",
-    payment_method_types: ["card"],
-    description: "PopcornPass Movie Ticket Booking"
-  })
+ stripe.paymentIntents.create({
+  amount: Math.round(amount * 100),
+  currency: "inr",
+  payment_method_types: ["card"],
+  description: "PopcornPass Movie Ticket Booking",
+  confirm: false
+})
+
     .then(function(paymentIntent) {
       res.json({
         success: true,
