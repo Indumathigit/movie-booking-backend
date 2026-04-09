@@ -7,6 +7,7 @@ var movieRoutes = require("./routes/movieRoutes")
 var bookingRoutes = require("./routes/bookingRoutes")
 var theaterRoutes = require("./routes/theaterRoutes")
 var authRoutes = require("./routes/authRoutes")
+var paymentRoutes = require("./routes/paymentRoutes")
 
 dotenv.config()
 
@@ -27,6 +28,7 @@ app.use("/api/movies", movieRoutes)
 app.use("/api/bookings", bookingRoutes)
 app.use("/api/theaters", theaterRoutes)
 app.use("/api/auth", authRoutes)
+app.use("/api/payments", paymentRoutes)
 
 var PORT = process.env.PORT || 5000
 var MONGO_URI = process.env.MONGO_URI

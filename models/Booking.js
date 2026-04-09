@@ -22,7 +22,9 @@ var bookingSchema = new mongoose.Schema({
   ],
   totalAmount: { type: Number, required: true },
   paymentDetails: { method: String, transactionId: String, status: String, paidAt: String },
-  bookedAt: { type: String, required: true }
+  bookedAt: { type: String, required: true },
+  // ✅ Added status field
+  status: { type: String, default: "confirmed", enum: ["confirmed", "cancelled"] }
 }, { timestamps: true })
 
 var Booking = mongoose.model("Booking", bookingSchema)

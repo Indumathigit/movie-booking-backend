@@ -13,9 +13,7 @@ function getAllBookings(req, res) {
 function getBookingById(req, res) {
   Booking.findOne({ bookingId: req.params.id })
     .then(function (booking) {
-      if (!booking) {
-        return res.status(404).json({ success: false, message: "Booking not found" })
-      }
+      if (!booking) return res.status(404).json({ success: false, message: "Booking not found" })
       res.json({ success: true, data: booking })
     })
     .catch(function (err) {
@@ -34,13 +32,27 @@ function createBooking(req, res) {
     })
 }
 
+// ✅ Mark as cancelled instead of deleting
 function cancelBooking(req, res) {
-  Booking.findOneAndDelete({ bookingId: req.params.id })
+  Booking.findOneAndUpdate(
+    { bookingId: req.params.id },
+    { status: "cancelled" },
+    { new: true }
+  )
     .then(function (booking) {
       if (!booking) {
-        return res.status(404).json({ success: false, message: "Booking not found" })
+        // try by _id as fallback
+        return Booking.findByIdAndUpdate(
+          req.params.id,
+          { status: "cancelled" },
+          { new: true }
+        )
       }
-      res.json({ success: true, message: "Booking cancelled successfully" })
+      return booking
+    })
+    .then(function (booking) {
+      if (!booking) return res.status(404).json({ success: false, message: "Booking not found" })
+      res.json({ success: true, message: "Booking cancelled successfully", data: booking })
     })
     .catch(function (err) {
       res.status(500).json({ success: false, message: err.message })
