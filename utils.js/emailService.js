@@ -1,12 +1,6 @@
-var nodemailer = require("nodemailer")
+var { Resend } = require("resend")
 
-var transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS  // use Gmail App Password, not your login password
-  }
-})
+var resend = new Resend(process.env.RESEND_API_KEY)
 
 function sendBookingConfirmation(booking) {
   if (!booking || !booking.user || !booking.user.email) return
@@ -56,20 +50,18 @@ function sendBookingConfirmation(booking) {
     </div>
   `
 
-  var mailOptions = {
-    from: '"PopcornPass" <' + process.env.EMAIL_USER + '>',
+  resend.emails.send({
+    from: "PopcornPass <onboarding@resend.dev>",
     to: booking.user.email,
     subject: "🎬 Booking Confirmed — " + movieTitle + " | PopcornPass",
     html: html
-  }
-
-  transporter.sendMail(mailOptions, function (err, info) {
-    if (err) {
-      console.log("Email send error:", err.message)
-    } else {
-      console.log("Confirmation email sent:", info.messageId)
-    }
   })
+    .then(function (data) {
+      console.log("Confirmation email sent:", data.id)
+    })
+    .catch(function (err) {
+      console.log("Email send error:", err.message)
+    })
 }
 
 module.exports = { sendBookingConfirmation }
