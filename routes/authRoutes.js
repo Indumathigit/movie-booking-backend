@@ -22,7 +22,12 @@ router.post("/register", function(req, res) {
       if (!user) return
       res.status(201).json({
         success: true,
-        user: { id: user._id, name: user.name, email: user.email }
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isAdmin: user.isAdmin || false   // ✅ include isAdmin
+        }
       })
     })
     .catch(function(err) {
@@ -48,7 +53,12 @@ router.post("/login", function(req, res) {
       }
       res.json({
         success: true,
-        user: { id: user._id, name: user.name, email: user.email }
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isAdmin: user.isAdmin || false   // ✅ include isAdmin
+        }
       })
     })
     .catch(function(err) {
@@ -56,6 +66,7 @@ router.post("/login", function(req, res) {
     })
 })
 
+// Reset password
 router.post("/reset", function(req, res) {
   var { email, newPassword } = req.body
   User.findOneAndUpdate(
