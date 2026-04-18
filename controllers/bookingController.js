@@ -1,4 +1,5 @@
 var Booking = require("../models/Booking")
+var sendEmail = require("../utils/sendEmail")
 
 function getAllBookings(req, res) {
   Booking.find()
@@ -13,7 +14,9 @@ function getAllBookings(req, res) {
 function getBookingById(req, res) {
   Booking.findOne({ bookingId: req.params.id })
     .then(function (booking) {
-      if (!booking) return res.status(404).json({ success: false, message: "Booking not found" })
+      if (!booking) {
+        return res.status(404).json({ success: false, message: "Booking not found" })
+      }
       res.json({ success: true, data: booking })
     })
     .catch(function (err) {
@@ -25,14 +28,15 @@ function createBooking(req, res) {
   var newBooking = new Booking(req.body)
   newBooking.save()
     .then(function (booking) {
+      // send confirmation email
+      sendEmail.sendBookingConfirmation(booking)
       res.status(201).json({ success: true, data: booking })
     })
     .catch(function (err) {
-      res.status(400).json({ success: false, message: err.message })
+      res.status(500).json({ success: false, message: err.message })
     })
 }
 
-// ✅ Mark as cancelled instead of deleting
 function cancelBooking(req, res) {
   Booking.findOneAndUpdate(
     { bookingId: req.params.id },
@@ -41,25 +45,16 @@ function cancelBooking(req, res) {
   )
     .then(function (booking) {
       if (!booking) {
-        // try by _id as fallback
-        return Booking.findByIdAndUpdate(
-          req.params.id,
-          { status: "cancelled" },
-          { new: true }
-        )
+        return res.status(404).json({ success: false, message: "Booking not found" })
       }
-      return booking
-    })
-    .then(function (booking) {
-      if (!booking) return res.status(404).json({ success: false, message: "Booking not found" })
-      res.json({ success: true, message: "Booking cancelled successfully", data: booking })
+      res.json({ success: true, data: booking })
     })
     .catch(function (err) {
       res.status(500).json({ success: false, message: err.message })
     })
 }
 
-function getBookingsByEmail(req, res) {
+function getUserBookings(req, res) {
   Booking.find({ "user.email": req.params.email })
     .then(function (bookings) {
       res.json({ success: true, data: bookings })
@@ -74,5 +69,5 @@ module.exports = {
   getBookingById,
   createBooking,
   cancelBooking,
-  getBookingsByEmail
+  getUserBookings
 }
