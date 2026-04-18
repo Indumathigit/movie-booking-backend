@@ -1,31 +1,62 @@
 var express = require("express")
 var router = express.Router()
-var bookingController = require("../controllers/bookingController")
+var { sendBookingConfirmation } = require("../utils/emailService")
+
+// You likely already have a Booking model — adjust the path if needed
 var Booking = require("../models/Booking")
 
-// Get all bookings for a specific showtime - MUST be before /:id
-router.get("/showtime", function(req, res) {
-  var { date, time, screen } = req.query
-  Booking.find({
-    "showtime.date": date,
-    "showtime.time": time,
-    "showtime.screen": screen,
-    "status": { $ne: "cancelled" } // ✅ exclude cancelled bookings from seat map
-  })
-    .then(function(bookings) {
+// GET /api/bookings?email=xxx
+router.get("/", function (req, res) {
+  var email = req.query.email
+  if (!email) return res.status(400).json({ success: false, message: "Email required" })
+
+  Booking.find({ "user.email": email })
+    .sort({ bookedAt: -1 })
+    .then(function (bookings) {
       res.json({ success: true, data: bookings })
     })
-    .catch(function(err) {
+    .catch(function (err) {
       res.status(500).json({ success: false, message: err.message })
     })
 })
 
-router.get("/", bookingController.getAllBookings)
-router.get("/user/:email", bookingController.getBookingsByEmail)
-router.get("/:id", bookingController.getBookingById)
-router.post("/", bookingController.createBooking)
-// ✅ Changed from DELETE to PUT for cancel (marks as cancelled)
-router.put("/cancel/:id", bookingController.cancelBooking)
-router.delete("/:id", bookingController.cancelBooking)
+// POST /api/bookings
+router.post("/", function (req, res) {
+  var bookingData = req.body
+
+  var booking = new Booking(bookingData)
+  booking.save()
+    .then(function (saved) {
+      // ✅ Send confirmation email after successful save
+      sendBookingConfirmation(saved)
+      res.json({ success: true, data: saved })
+    })
+    .catch(function (err) {
+      res.status(500).json({ success: false, message: err.message })
+    })
+})
+
+// PUT /api/bookings/:id/cancel
+router.put("/:id/cancel", function (req, res) {
+  var bookingId = req.params.id
+
+  Booking.findOneAndUpdate(
+    {
+      $or: [
+        { bookingId: bookingId },
+        { _id: bookingId.match(/^[a-f\d]{24}$/i) ? bookingId : null }
+      ]
+    },
+    { status: "cancelled" },
+    { new: true }
+  )
+    .then(function (updated) {
+      if (!updated) return res.status(404).json({ success: false, message: "Booking not found" })
+      res.json({ success: true, data: updated })
+    })
+    .catch(function (err) {
+      res.status(500).json({ success: false, message: err.message })
+    })
+})
 
 module.exports = router
