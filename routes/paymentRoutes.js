@@ -1,6 +1,8 @@
 var express = require("express")
 var router = express.Router()
 var paymentController = require("../controllers/paymentController")
+var paymentRoutes = require("./routes/paymentRoutes")
+app.use("/api/payment", paymentRoutes)
 
 // ✅ Create Stripe PaymentIntent - required for real card validation
 router.post("/create-intent", function(req, res) {
