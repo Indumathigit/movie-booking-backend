@@ -1,6 +1,6 @@
 var express = require("express")
 var router = express.Router()
-var { sendBookingConfirmation } = require("../utils/emailService")
+//var { sendBookingConfirmation } = require("../utils/emailService")
 
 // You likely already have a Booking model — adjust the path if needed
 var Booking = require("../models/Booking")
@@ -28,7 +28,7 @@ router.post("/", function (req, res) {
   booking.save()
     .then(function (saved) {
       // ✅ Send confirmation email after successful save
-      sendBookingConfirmation(saved)
+      //sendBookingConfirmation(saved)
       res.json({ success: true, data: saved })
     })
     .catch(function (err) {
